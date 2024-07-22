@@ -1,0 +1,19 @@
+name: run-mvn-tests
+run-name: "Run maven tests"
+on: pull_request
+jobs:
+  test-codebase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+      - run: mvn --batch-mode clean test
+        name: Run mvn test
+      - uses: test-summary/action@v2
+        name: Test summary
+        with:
+          paths: "target/surefire-reports/TEST-*.xml"

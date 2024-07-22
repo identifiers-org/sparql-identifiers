@@ -1,0 +1,51 @@
+<head>
+    <link href="https://unpkg.com/@triply/yasgui/build/yasgui.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@triply/yasgui/build/yasgui.min.js"></script>
+    <style>
+        .yasgui .autocompleteWrapper {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<div id="yasgui"></div>
+<script>
+  let shouldInitQueries = false;
+  if (localStorage.getItem("yagui__config") === null) {
+    shouldInitQueries = true;
+  }
+
+  const yasgui = new Yasgui(document.getElementById("yasgui"), {
+    requestConfig: { endpoint: "/sparql" },
+    copyEndpointOnNewTab: false,
+  });
+  if (shouldInitQueries) {
+    const queryForIdorgIRI = `PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT * WHERE {
+    <http://identifiers.org/uniprot:P12345> owl:sameAs ?obj .
+} LIMIT 10`
+    const queryForOtherIRI = `PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT * WHERE {
+    <http://purl.uniprot.org/uniprot/P12345> owl:sameAs ?obj .
+} LIMIT 10`
+    const queryForActive = `PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?target
+FROM <id:active>
+WHERE {
+    <http://identifiers.org/uniprot:P12345> owl:sameAs ?target
+}`
+    Yasgui.defaults.requestConfig.endpoint = "/sparql";
+    const t1 = yasgui.getTab();
+    t1.setQuery(queryForIdorgIRI).setName("identifiers.org IRI");
+    yasgui.addTab(true, {
+      ...Yasgui.Tab.getDefaults(),
+      name: "Other IRI"
+    }).setQuery(queryForOtherIRI);
+    yasgui.addTab(true, {
+      ...Yasgui.Tab.getDefaults(),
+      name: "Active IRI"
+    }).setQuery(queryForActive);
+    t1.show();
+  }
+</script>
+</body>
