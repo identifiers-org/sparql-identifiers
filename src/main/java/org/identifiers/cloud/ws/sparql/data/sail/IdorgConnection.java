@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.eclipse.rdf4j.common.iteration.CloseableIteratorIteration;
+import org.eclipse.rdf4j.common.iteration.UnionIteration;
 import org.eclipse.rdf4j.common.transaction.IsolationLevel;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Namespace;
@@ -29,11 +30,14 @@ public class IdorgConnection extends AbstractSailConnection {
     private final ValueFactory vf;
     private final SameAsResolver sameAsResolver;
     private final SPARQLServiceResolver fd = new SPARQLServiceResolver();
+	private final StackableSail sailBase;
 
+	//TODO fix type of sailBase
     public IdorgConnection(ValueFactory vf, SameAsResolver sameAsResolver, AbstractSail sailBase) {
         super(sailBase);
         this.vf = vf;
         this.sameAsResolver = sameAsResolver;
+		this.sailBase = (StackableSail) sailBase;
     }
 
     @Override
@@ -55,7 +59,7 @@ public class IdorgConnection extends AbstractSailConnection {
     @Override
     protected CloseableIteration<? extends Resource> getContextIDsInternal() throws SailException {
         var it = Collections.singletonList(vf.createIRI("id:active")).iterator();
-        return new CloseableIteratorIteration<>(it);
+        return new UnionIteration<>(new CloseableIteratorIteration<>(it), sailBase.getBaseSail().getConnection().getContextIDs());
     }
 
     @Override
@@ -64,13 +68,16 @@ public class IdorgConnection extends AbstractSailConnection {
                                                                             Value obj,
                                                                             boolean b,
                                                                             Resource... contexts) throws SailException {
-		final CloseableIteration<Statement> bedFileFilterReader;
+		final CloseableIteration<Statement> iter;
 		try {
-			bedFileFilterReader = new IdorgTripleSource(vf, sameAsResolver).getStatements(subj, pred, obj, contexts);
+			
+			var outerIter = new IdorgTripleSource(vf, sameAsResolver).getStatements(subj, pred, obj, contexts);
+			var iterOfInnerSail = sailBase.getBaseSail().getConnection().getStatements(subj, pred, obj, b, contexts);
+			iter = new UnionIteration<>(outerIter, iterOfInnerSail);
 		} catch (QueryEvaluationException e1) {
 			throw new SailException(e1);
 		}
-		return new CloseableIteratorIteration<>(bedFileFilterReader);
+		return new CloseableIteratorIteration<>(iter);
 	}
 
 	@Override
@@ -93,7 +100,7 @@ public class IdorgConnection extends AbstractSailConnection {
     public String getNamespaceInternal(String prefix) throws SailException {
         if (OWL.PREFIX.equals(prefix))
             return OWL.NAMESPACE;
-        return null;
+        return sailBase.getBaseSail().getConnection().getNamespace(prefix);
     }
 
     @Override
