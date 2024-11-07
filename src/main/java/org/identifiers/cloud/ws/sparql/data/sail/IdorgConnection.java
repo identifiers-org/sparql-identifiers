@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.eclipse.rdf4j.common.iteration.CloseableIteratorIteration;
+import org.eclipse.rdf4j.common.iteration.UnionIteration;
 import org.eclipse.rdf4j.common.transaction.IsolationLevel;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Namespace;
@@ -42,11 +43,14 @@ public class IdorgConnection extends AbstractSailConnection {
                                                                         BindingSet bindingSet,
                                                                         boolean b) throws SailException {
         try {
-
             IdorgTripleSource tripleSource = new IdorgTripleSource(vf, sameAsResolver);
             EvaluationStrategy strategy = new DefaultEvaluationStrategy(tripleSource, fd);
             tupleExpr = tupleExpr.clone();
-            return strategy.evaluate(tupleExpr, bindingSet);
+
+            var baseResultSet = getSailBase().getConnection()
+                    .evaluate(tupleExpr, dataset, bindingSet, b);
+            var idorgResultSet = strategy.evaluate(tupleExpr, bindingSet);
+            return new UnionIteration<>(baseResultSet, idorgResultSet);
         } catch (QueryEvaluationException e) {
             throw new SailException(e);
         }
@@ -64,13 +68,13 @@ public class IdorgConnection extends AbstractSailConnection {
                                                                             Value obj,
                                                                             boolean b,
                                                                             Resource... contexts) throws SailException {
-		final CloseableIteration<Statement> bedFileFilterReader;
 		try {
-			bedFileFilterReader = new IdorgTripleSource(vf, sameAsResolver).getStatements(subj, pred, obj, contexts);
+			var bedFileFilterReader = new IdorgTripleSource(vf, sameAsResolver).getStatements(subj, pred, obj, contexts);
+            var baseStatements = this.getSailBase().getConnection().getStatements(subj, pred, obj, b, contexts);
+            return  new CloseableIteratorIteration<>(new UnionIteration<>(bedFileFilterReader, baseStatements));
 		} catch (QueryEvaluationException e1) {
 			throw new SailException(e1);
 		}
-		return new CloseableIteratorIteration<>(bedFileFilterReader);
 	}
 
 	@Override
@@ -93,7 +97,7 @@ public class IdorgConnection extends AbstractSailConnection {
     public String getNamespaceInternal(String prefix) throws SailException {
         if (OWL.PREFIX.equals(prefix))
             return OWL.NAMESPACE;
-        return null;
+        return getSailBase().getConnection().getNamespace(prefix);
     }
 
     @Override
