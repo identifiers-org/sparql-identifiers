@@ -9,7 +9,7 @@ ENV WS_SPARQL_JVM_MEMORY_MAX 1024m
 RUN mkdir -p /home/app
 
 # Add the application structure
-COPY "./target/sparql-2.0.jar" /home/app/service.jar
+COPY "./target/sparql-2.1.jar" /home/app/service.jar
 
 # Launch information
 EXPOSE 8080

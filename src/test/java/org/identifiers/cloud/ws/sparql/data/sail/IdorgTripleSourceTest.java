@@ -18,6 +18,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.sail.SailException;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.identifiers.cloud.ws.sparql.data.URIextended;
 import org.identifiers.cloud.ws.sparql.services.SameAsResolver;
 import org.junit.jupiter.api.BeforeAll;
@@ -314,6 +315,7 @@ class IdorgTripleSourceTest {
 
     private SailRepositoryConnection getConnection() {
         IdorgStore rep = new IdorgStore(mockedSameAsResolver);
+        rep.setBaseSail(new MemoryStore());
         rep.setDataDir(dataDir);
         rep.setValueFactory(SimpleValueFactory.getInstance());
         SailRepository sr = new SailRepository(rep);
