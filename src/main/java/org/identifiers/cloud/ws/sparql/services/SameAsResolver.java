@@ -29,10 +29,10 @@ public final class SameAsResolver {
     private List<PrefixPatterns> prefixPatterns;
 
     public void parseResolverDataset(String json) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-        var endpointResponse = mapper.readValue(json, EndpointResponse.class);
+        parseResolverDataset(EndpointResponse.fromJson(json));
+    }
 
+    public void parseResolverDataset(EndpointResponse endpointResponse) throws JsonProcessingException {
         prefixPatterns = new ArrayList<>();
         for (Namespace namespace : endpointResponse.namespaces()) {
             PrefixPatterns prefixPattern = new PrefixPatterns(namespace.pattern());

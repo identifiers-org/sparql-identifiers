@@ -34,7 +34,6 @@ public abstract class QueryEvaluator {
                     }
                 }
             }
-            throw new IllegalStateException("acceptHeader is mandatory.");
         }
         return false;
     }

@@ -18,8 +18,9 @@ import java.io.IOException;
 class GraphQueryEvaluator extends QueryEvaluator {
     public GraphQueryEvaluator() {
         super(GraphQuery.class::isInstance,
-                RDFFormat.TURTLE, RDFFormat.NTRIPLES,
-                RDFFormat.JSONLD, RDFFormat.RDFXML);
+                RDFFormat.TURTLE, RDFFormat.NTRIPLES, RDFFormat.JSONLD,
+                RDFFormat.RDFXML, RDFFormat.TRIG, RDFFormat.NQUADS,
+                RDFFormat.RDFJSON);
     }
 
     @Override

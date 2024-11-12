@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.identifiers.cloud.ws.sparql.data.URIextended;
+import org.identifiers.cloud.ws.sparql.data.resolution_models.EndpointResponse;
 import org.identifiers.cloud.ws.sparql.services.SameAsResolver;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

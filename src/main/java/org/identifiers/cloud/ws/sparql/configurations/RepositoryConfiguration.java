@@ -1,7 +1,7 @@
 package org.identifiers.cloud.ws.sparql.configurations;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
@@ -13,11 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class RepositoryConfiguration {
@@ -31,7 +30,10 @@ public class RepositoryConfiguration {
         try (var conn = updatableRepository.getConnection()) {
             for (URL importUrl : imports) {
                 var format = Rio.getParserFormatForFileName(importUrl.toString())
-                        .orElse(RDFFormat.RDFXML);
+                        .orElseGet(() -> {
+                            log.error("Failed to guess rdf format by filename for '{}', trying RDFXML...", importUrl);
+                            return RDFFormat.RDFXML;
+                        });
                 conn.add(importUrl, null, format);
             }
         }

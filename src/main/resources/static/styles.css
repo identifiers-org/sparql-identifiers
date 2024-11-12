@@ -1,0 +1,36 @@
+.logo-box {
+    display: flex;
+    background-image: url("data:image/svg+xml;charset=UTF-8,<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"147 248 60 248\" xml:space=\"preserve\"><polygon class=\"st0\" fill=\"%23000\" fill-opacity=\"0.05\" points=\"147,363.6 259.3,363.6 259.3,428.4 203.2,460.9 147,428.4 \"/></svg>");
+    padding: .5rem 1rem;
+    border-radius: .75rem;
+    background-position: 100% 82%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: #0086b4;
+    align-items: center;
+}
+.logo-box > img {
+    height: 56px;
+    width: 56px;
+}
+.logo-text {
+    color: white;
+    flex-grow: 1;
+    margin-left: 1rem
+}
+.logo-text h1 {
+    font-size: 2.5rem !important;
+    line-height: 1.2;
+    margin: 1rem 0;
+}
+.logo-subtitle {
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 300;
+    text-align: right;
+    margin: -1rem 1.5rem 0 0;
+    font-style: italic;
+}
+.more-info-text {
+    margin-bottom: 1rem;
+}

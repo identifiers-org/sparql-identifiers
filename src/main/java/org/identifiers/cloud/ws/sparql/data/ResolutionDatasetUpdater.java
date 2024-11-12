@@ -1,7 +1,9 @@
 package org.identifiers.cloud.ws.sparql.data;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.identifiers.cloud.ws.sparql.data.resolution_models.EndpointResponse;
 import org.identifiers.cloud.ws.sparql.services.SameAsResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,37 +15,35 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 
-import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public final class ResolutionDatasetUpdater implements Runnable {
     @Value("${org.identifiers.cloud.ws.sparql.updater.resolverDatasetUrl}")
     URI resolverURI;
-    @Value("${org.identifiers.cloud.ws.sparql.updater.timeIntervalHours}")
-    int timeInterval;
+    @Value("${org.identifiers.cloud.ws.sparql.updater.timeInterval}")
+    Duration timeInterval;
 
     private final SameAsResolver sameAsResolver;
     private final HttpClient httpClient;
     private final ScheduledExecutorService updateExecutorService;
-    public ResolutionDatasetUpdater(HttpClient httpClient,
-                                    ScheduledExecutorService updateExecutorService,
-                                    SameAsResolver sameAsResolver) {
-        this.sameAsResolver = sameAsResolver;
-        this.httpClient = httpClient;
-        this.updateExecutorService = updateExecutorService;
+    private final ContextsService contextsService;
+
+
+    @PostConstruct
+    public void schedulePeriodicRuns() {
+        this.run();
+        var secondsInterval = timeInterval.getSeconds();
+        updateExecutorService.scheduleAtFixedRate(this, secondsInterval, secondsInterval, SECONDS);
     }
 
     @Override
-    @PostConstruct
     public void run() {
-        this.update();
-        updateExecutorService.scheduleAtFixedRate(this, timeInterval, timeInterval, HOURS);
-    }
-
-    public void update() {
         log.debug("Updating resolve dataset from {}", resolverURI);
         HttpRequest get = HttpRequest
                 .newBuilder(resolverURI)
@@ -56,7 +56,9 @@ public final class ResolutionDatasetUpdater implements Runnable {
             int code = send.statusCode();
             if (code == 200) {
                 String json = send.body();
-                sameAsResolver.parseResolverDataset(json);
+                var endpointResponse = EndpointResponse.fromJson(json);
+                sameAsResolver.parseResolverDataset(endpointResponse);
+                contextsService.updatePrefixes(endpointResponse);
             } else {
                 log.error("Failed to update resolution data with HTTP code: {}", code);
             }

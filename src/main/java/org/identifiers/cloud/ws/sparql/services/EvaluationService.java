@@ -12,6 +12,8 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.identifiers.cloud.ws.sparql.query_evaluators.QueryEvaluator;
 import org.springframework.stereotype.Service;
+import org.springframework.web.HttpMediaTypeException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,7 +27,7 @@ public class EvaluationService {
 
     public void evaluate(HttpServletResponse result, String query, String acceptHeader,
                           String[] defaultGraphUri, String[] namedGraphUris)
-            throws MalformedQueryException, IOException, IllegalStateException {
+            throws MalformedQueryException, IOException, IllegalStateException, HttpMediaTypeNotSupportedException {
         try (RepositoryConnection connection = repository.getConnection()) {
             Query preparedQuery = connection.prepareQuery(QueryLanguage.SPARQL, query);
             preparedQuery.setDataset(getQueryDataSet(defaultGraphUri, namedGraphUris, connection));
@@ -33,8 +35,12 @@ public class EvaluationService {
             for (QueryEvaluator qt : queryEvaluators) {
                 if (qt.accepts(preparedQuery, acceptHeader)) {
                     qt.evaluateAndRespond(result, preparedQuery, acceptHeader);
+                    return;
                 }
             }
+            String msg = String.format("This SPARQL endpoint cannot respond with %s for queries of type %s",
+                    acceptHeader, preparedQuery.getClass().getSimpleName());
+            throw new HttpMediaTypeNotSupportedException(msg);
         }
     }
 
