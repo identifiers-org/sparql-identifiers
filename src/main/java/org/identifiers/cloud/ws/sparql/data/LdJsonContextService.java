@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 
 @Getter
 @Service
-public class ContextsService {
+public class LdJsonContextService {
     private Map<String, Map<String, String>> jsonLdContexts = Map.of();
 
     public void updatePrefixes(EndpointResponse endpointResponse) {
         var expandedPrefixes = endpointResponse.namespaces().stream().map(Namespace::prefix)
                 .collect(Collectors.toMap(Function.identity(), this::getContextExpandedPrefix));
-        jsonLdContexts = Map.of("@contexts", expandedPrefixes);
+        jsonLdContexts = Map.of("@context", expandedPrefixes);
     }
 
     private String getContextExpandedPrefix(String idorgPrefix) {

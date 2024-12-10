@@ -32,7 +32,7 @@ public final class ResolutionDatasetUpdater implements Runnable {
     private final SameAsResolver sameAsResolver;
     private final HttpClient httpClient;
     private final ScheduledExecutorService updateExecutorService;
-    private final ContextsService contextsService;
+    private final LdJsonContextService ldJsonContextService;
 
 
     @PostConstruct
@@ -58,7 +58,7 @@ public final class ResolutionDatasetUpdater implements Runnable {
                 String json = send.body();
                 var endpointResponse = EndpointResponse.fromJson(json);
                 sameAsResolver.parseResolverDataset(endpointResponse);
-                contextsService.updatePrefixes(endpointResponse);
+                ldJsonContextService.updatePrefixes(endpointResponse);
             } else {
                 log.error("Failed to update resolution data with HTTP code: {}", code);
             }
